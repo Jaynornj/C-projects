@@ -71,7 +71,7 @@ int main() {
                 if (populated) {
                     searchAndDisplayCircle(circles);
                 } else {
-                    printf("Circles must be populated first.\n");
+                    printf("Circles must be populated first. Select option 1\n");
                 }
                 break;
             case 3:
