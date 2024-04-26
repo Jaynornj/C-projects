@@ -1,8 +1,11 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <time.h>
+#include <stdlib.h> //  for malloc
+#include <string.h> //  for strcspn
+#include <math.h> //  for pow
+#include <stdbool.h> //  for bool type
+#include <time.h> //  for srand
+#include <ctype.h> //  for isdigit
+
 
 //AUTHOR: Jaynor Neiva
 //Description: Final test XC
@@ -29,6 +32,8 @@ void displayCircle(Circle circle);
 void searchAndDisplayCircle(Circle *circles);
 void displayLargestAndSmallest(Circle *circles);
 char *input(char *buffer, int size);
+bool validateRadius(const char *input);
+bool validateDigits(const char *input);
 
 int main() {
     // Seed the random number generator
@@ -54,6 +59,10 @@ int main() {
 
         char buffer[BUFFER_SIZE];
         input(buffer, BUFFER_SIZE);
+        if(!validateDigits(buffer)) {
+            printf("Please enter digits.\n\n");
+            continue; //repeat the loop if the input is invalid
+        }
         sscanf(buffer, "%d", &option);
 
         switch (option) {
@@ -120,13 +129,24 @@ void displayCircle(Circle circle) {
 
 void searchAndDisplayCircle(Circle *circles) {
     double lowerBound, upperBound;
-    printf("Enter lower bound of radius range: ");
     char buffer[BUFFER_SIZE];
-    input(buffer, BUFFER_SIZE);
+
+    do {
+        printf("Enter lower bound of radius range: ");
+        input(buffer, BUFFER_SIZE);
+        if (!validateDigits(buffer)) {
+            printf("Please enter digits only.\n");
+        }
+    } while (!validateDigits(buffer));
     sscanf(buffer, "%lf", &lowerBound);
 
-    printf("Enter upper bound of radius range: ");
-    input(buffer, BUFFER_SIZE);
+    do {
+        printf("Enter upper bound of radius range: ");
+        input(buffer, BUFFER_SIZE);
+        if (!validateDigits(buffer)) {
+            printf("Please enter digits only.\n");
+        }
+    } while (!validateDigits(buffer));
     sscanf(buffer, "%lf", &upperBound);
 
     int found = 0;
@@ -138,8 +158,17 @@ void searchAndDisplayCircle(Circle *circles) {
     }
 
     if (!found) {
-        printf("No circles found within the specified radius range.\n");
+        printf("No circles found with this radius range.\n");
     }
+}
+
+bool validateDigits(const char *input) {
+    for (int i = 0; i < strlen(input); i++) {
+        if (!isdigit(input[i])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void displayLargestAndSmallest(Circle *circles) {
@@ -161,9 +190,9 @@ void displayLargestAndSmallest(Circle *circles) {
     printf("\nCircle with smallest radius:\n");
     displayCircle(circles[smallestIndex]);
 }
-
 char *input(char *buffer, int size) {
     fgets(buffer, size, stdin);
     buffer[strcspn(buffer, "\n")] = '\0'; // Remove newline character
     return buffer;
 }
+
