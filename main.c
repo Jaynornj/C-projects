@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h> //  for malloc
 #include <string.h> //  for strcspn
-#include <math.h> //  for pow
 #include <stdbool.h> //  for bool type
 #include <time.h> //  for srand
 #include <ctype.h> //  for isdigit
@@ -14,7 +13,7 @@
 
 // Constants
 #define PI 3.14159
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 256                                 // Buffer size for input
 
 // Struct Circle
 typedef struct {
@@ -35,18 +34,18 @@ bool validateRadius(const char *input);
 bool validateDigits(const char *input);
 
 int main() {
-    // Seed the random number generator
-    srand(time(NULL));
+
+    srand(time(NULL));                                // for the random number generator
 
     // Allocate memory for array of circles
     Circle *circles = (Circle *)malloc(10 * sizeof(Circle));
     if (circles == NULL) {
         printf("Memory allocation failed.\n");
-        return 1;
+        return 1; // Exit program
     }
 
     int option;
-    int populated = 0; // Flag to track if circles are populated
+    int populated = 0;                                             // Flag to track if circles are populated
 
     do {
         // Display menu
@@ -56,17 +55,17 @@ int main() {
         printf("3 - Quit Program\n");
         printf("Enter your choice: ");
 
-        char buffer[BUFFER_SIZE];
+        char buffer[BUFFER_SIZE];                                   // Buffer for input
         input(buffer, BUFFER_SIZE);
-        if(!validateDigits(buffer)) {
+        if(!validateDigits(buffer)) {                         // Validate input
             printf("Please enter digits.\n\n");
-            continue; //repeat the loop if the input is invalid
+            continue;                                               //repeat the loop if the input is invalid
         }
         sscanf(buffer, "%d", &option);
 
         switch (option) {
             case 1:
-                if (!populated) {
+                if (!populated) {                             // if (populated):Check if circles are already populated
                     populateCircles(circles);
                     calculateAreas(circles);
                     calculateCircumferences(circles);
@@ -103,20 +102,20 @@ int main() {
 
 void populateCircles(Circle *circles) {
     for (int i = 0; i < 10; i++) {
-        circles[i].radius = (rand() % 99) + 2; // Generate random radius between 2 and 100
+        circles[i].radius = (rand() % 99) + 2;                      // Generate random radius between 2 and 100
     }
     printf("Circles populated with random radius values.\n\n");
 }
 
 void calculateAreas(Circle *circles) {
     for (int i = 0; i < 10; i++) {
-        circles[i].area = PI * circles[i].radius * circles[i].radius;
+        circles[i].area = PI * circles[i].radius * circles[i].radius;    // Area = PI * r^2
     }
 }
 
 void calculateCircumferences(Circle *circles) {
     for (int i = 0; i < 10; i++) {
-        circles[i].circumference = 2 * PI * circles[i].radius;
+        circles[i].circumference = 2 * PI * circles[i].radius;         // Circumference = 2 * PI * r
     }
 }
 
@@ -128,12 +127,12 @@ void displayCircle(Circle circle) {
 
 void searchAndDisplayCircle(Circle *circles) {
     double lowerBound, upperBound;
-    char buffer[BUFFER_SIZE];
+    char buffer[BUFFER_SIZE];                                       // Buffer for input
 
     do {
         printf("Enter lower bound of radius range: ");
         input(buffer, BUFFER_SIZE);
-        if (!validateDigits(buffer)) {
+        if (!validateDigits(buffer)) {                        // Validate input
             printf("Please enter digits only.\n");
         }
     } while (!validateDigits(buffer));
@@ -150,18 +149,18 @@ void searchAndDisplayCircle(Circle *circles) {
 
     int found = 0;
     for (int i = 0; i < 10; i++) {
-        if (circles[i].radius >= lowerBound && circles[i].radius <= upperBound) {
+        if (circles[i].radius >= lowerBound && circles[i].radius <= upperBound) { // Check if radius is within range
             displayCircle(circles[i]);
             found = 1;
         }
     }
 
-    if (!found) {
+    if (!found) { // If no circles found
         printf("No circles found with this radius range.\n");
     }
 }
 
-bool validateDigits(const char *input) {
+bool validateDigits(const char *input) {                                // Validate if input is digits only
     for (int i = 0; i < strlen(input); i++) {
         if (!isdigit(input[i])) {
             return false;
@@ -175,23 +174,25 @@ void displayLargestAndSmallest(Circle *circles) {
     int smallestIndex = 0;
 
     for (int i = 1; i < 10; i++) {
-        if (circles[i].radius > circles[largestIndex].radius) {
+        if (circles[i].radius > circles[largestIndex].radius) { // Check if radius is larger
             largestIndex = i;
         }
-        if (circles[i].radius < circles[smallestIndex].radius) {
+        if (circles[i].radius < circles[smallestIndex].radius) { // Check if radius is smaller
             smallestIndex = i;
         }
     }
 
     printf("Circle with largest radius:\n");
-    displayCircle(circles[largestIndex]);
+    displayCircle(circles[largestIndex]);                // Display circle with largest radius
 
     printf("\nCircle with smallest radius:\n");
-    displayCircle(circles[smallestIndex]);
+    displayCircle(circles[smallestIndex]);               // Display circle with smallest radius
 }
 char *input(char *buffer, int size) {
     fgets(buffer, size, stdin);
-    buffer[strcspn(buffer, "\n")] = '\0'; // Remove newline character
-    return buffer;
+    buffer[strcspn(buffer, "\n")] = '\0';          // Remove newline character
+    return buffer; // Return input
 }
 
+// Good day Dr.Saylani, Thank you for the opportunity to retake the final test.
+// I have made the necessary changes to the code and I am submitting it for your review.
