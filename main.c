@@ -14,7 +14,6 @@
 
 // Constants
 #define PI 3.14159
-#define MAX_CIRCLES 10
 #define BUFFER_SIZE 256
 
 // Struct Circle
@@ -40,7 +39,7 @@ int main() {
     srand(time(NULL));
 
     // Allocate memory for array of circles
-    Circle *circles = (Circle *)malloc(MAX_CIRCLES * sizeof(Circle));
+    Circle *circles = (Circle *)malloc(10 * sizeof(Circle));
     if (circles == NULL) {
         printf("Memory allocation failed.\n");
         return 1;
@@ -91,7 +90,7 @@ int main() {
                 }
                 break;
             default:
-                printf("Invalid choice. Please try again.\n");
+                printf("Invalid choice. Please keep between option 1 and 3.\n");
                 break;
         }
     } while (option != 3);
@@ -103,20 +102,20 @@ int main() {
 }
 
 void populateCircles(Circle *circles) {
-    for (int i = 0; i < MAX_CIRCLES; i++) {
+    for (int i = 0; i < 10; i++) {
         circles[i].radius = (rand() % 99) + 2; // Generate random radius between 2 and 100
     }
     printf("Circles populated with random radius values.\n\n");
 }
 
 void calculateAreas(Circle *circles) {
-    for (int i = 0; i < MAX_CIRCLES; i++) {
+    for (int i = 0; i < 10; i++) {
         circles[i].area = PI * circles[i].radius * circles[i].radius;
     }
 }
 
 void calculateCircumferences(Circle *circles) {
-    for (int i = 0; i < MAX_CIRCLES; i++) {
+    for (int i = 0; i < 10; i++) {
         circles[i].circumference = 2 * PI * circles[i].radius;
     }
 }
@@ -150,7 +149,7 @@ void searchAndDisplayCircle(Circle *circles) {
     sscanf(buffer, "%lf", &upperBound);
 
     int found = 0;
-    for (int i = 0; i < MAX_CIRCLES; i++) {
+    for (int i = 0; i < 10; i++) {
         if (circles[i].radius >= lowerBound && circles[i].radius <= upperBound) {
             displayCircle(circles[i]);
             found = 1;
@@ -175,7 +174,7 @@ void displayLargestAndSmallest(Circle *circles) {
     int largestIndex = 0;
     int smallestIndex = 0;
 
-    for (int i = 1; i < MAX_CIRCLES; i++) {
+    for (int i = 1; i < 10; i++) {
         if (circles[i].radius > circles[largestIndex].radius) {
             largestIndex = i;
         }
