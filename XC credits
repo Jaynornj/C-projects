@@ -1,0 +1,136 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <math.h>
+#include <ctype.h>
+#include <string.h>
+
+#define PI 3.14
+#define BUFFER_SIZE 100
+
+// Struct Circle
+typedef struct {
+    double radius;
+    double area;
+    double circumference;
+} Circle;
+
+// Struct Cylinder
+typedef struct {
+    Circle base;
+    double height;
+    double volume;
+} Cylinder;
+
+// Function prototypes
+int validateDigits(const char *input);
+void populateCylinders(Cylinder *cylinders);
+void calculateVolumes(Cylinder *cylinders);
+void displayLargestAndSmallest(Cylinder *cylinders);
+char *input(char *buffer, int size);
+
+int main() {
+    // Allocate memory for array of cylinders
+    Cylinder *cylinders = (Cylinder *)malloc(10 * sizeof(Cylinder));
+    if (cylinders == NULL) {
+        printf("Memory allocation failed.\n");
+        return 1;
+    }
+
+    int option;
+    bool populated = false;
+    char buffer[BUFFER_SIZE];
+
+    do {
+        printf("\nMenu:\n");
+        printf("1 - Populate all cylinders\n");
+        printf("2 - Search and display a cylinder by radius range\n");
+        printf("3 - Quit Program\n");
+        printf("Enter your choice: ");
+
+        input(buffer, BUFFER_SIZE);
+        if (!validateDigits(buffer)) {
+            printf("Please enter digits only.\n");
+            continue;
+        }
+        option = atoi(buffer);
+
+        switch (option) {
+            case 1:
+                if (!populated) {
+                    populateCylinders(cylinders);
+                    calculateVolumes(cylinders);
+                    populated = true;
+                } else {
+                    printf("Cylinders already populated.\n");
+                }
+                break;
+            case 2:
+                if (populated) {
+                    displayLargestAndSmallest(cylinders);
+                } else {
+                    printf("Cylinders must be populated first. Select option 1.\n");
+                }
+                break;
+            case 3:
+                printf("Quitting program.\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+                break;
+        }
+    } while (option != 3);
+
+    free(cylinders);
+
+    return 0;
+}
+
+int validateDigits(const char *input) {
+    for (int i = 0; i < strlen(input); i++) {
+        if (!isdigit(input[i])) {
+            return 0; // Return false
+        }
+    }
+    return 1; // Return true
+}
+
+void populateCylinders(Cylinder *cylinders) {
+    for (int i = 0; i < 10; i++) {
+        cylinders[i].base.radius = (rand() % 99) + 2;
+        cylinders[i].height = (rand() % 99) + 2;
+    }
+    printf("Cylinders populated with random radius and height values.\n");
+}
+
+void calculateVolumes(Cylinder *cylinders) {
+    for (int i = 0; i < 10; i++) {
+        cylinders[i].volume = PI * pow(cylinders[i].base.radius, 2) * cylinders[i].height;
+    }
+}
+
+void displayLargestAndSmallest(Cylinder *cylinders) {
+    int largestIndex = 0;
+    int smallestIndex = 0;
+
+    for (int i = 1; i < 10; i++) {
+        if (cylinders[i].height > cylinders[largestIndex].height) {
+            largestIndex = i;
+        }
+        if (cylinders[i].height < cylinders[smallestIndex].height) {
+            smallestIndex = i;
+        }
+    }
+
+    printf("Cylinder with largest height:\n");
+    printf("Radius: %.2f, Height: %.2f, Volume: %.2f\n", cylinders[largestIndex].base.radius, cylinders[largestIndex].height, cylinders[largestIndex].volume);
+
+    printf("\nCylinder with smallest height:\n");
+    printf("Radius: %.2f, Height: %.2f, Volume: %.2f\n", cylinders[smallestIndex].base.radius, cylinders[smallestIndex].height, cylinders[smallestIndex].volume);
+}
+
+char *input(char *buffer, int size) {
+    fgets(buffer, size, stdin);
+    buffer[strcspn(buffer, "\n")] = '\0';          // Remove newline character
+    return buffer; // Return input
+}
