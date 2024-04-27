@@ -27,6 +27,9 @@ int validateDigits(const char *input);
 void populateCylinders(Cylinder *cylinders);
 void calculateVolumes(Cylinder *cylinders);
 void displayLargestAndSmallest(Cylinder *cylinders);
+void searchByRadiusRange(Cylinder *cylinders, double minRadius, double maxRadius);
+void displayCylinderData(Cylinder cylinder);
+void findLargestAndSmallestVolume(Cylinder *cylinders);
 char *input(char *buffer, int size);
 
 int main() {
@@ -67,16 +70,39 @@ int main() {
                 break;
             case 2:
                 if (populated) {
-                    displayLargestAndSmallest(cylinders);
+                    double minRadius, maxRadius;
+                    printf("Enter minimum radius: ");
+                    input(buffer, BUFFER_SIZE);
+                    if (!validateDigits(buffer)) {
+                        printf("Invalid input for radius.\n");
+                        break;
+                    }
+                    minRadius = atof(buffer);
+
+                    printf("Enter maximum radius: ");
+                    input(buffer, BUFFER_SIZE);
+                    if (!validateDigits(buffer)) {
+                        printf("Invalid input for radius.\n");
+                        break;
+                    }
+                    maxRadius = atof(buffer);
+
+                    if (minRadius > maxRadius) {
+                        printf("Minimum radius should be less than or equal to maximum radius.\n");
+                        break;
+                    }
+
+                    searchByRadiusRange(cylinders, minRadius, maxRadius);
                 } else {
                     printf("Cylinders must be populated first. Select option 1.\n");
                 }
                 break;
             case 3:
                 printf("Quitting program.\n");
+                findLargestAndSmallestVolume(cylinders);
                 break;
             default:
-                printf("Invalid choice. Please try again.\n");
+                printf("Invalid choice. Please try again. Keep between 1 and 3.\n");
                 break;
         }
     } while (option != 3);
@@ -88,7 +114,7 @@ int main() {
 
 int validateDigits(const char *input) {
     for (int i = 0; i < strlen(input); i++) {
-        if (!isdigit(input[i])) {
+        if (!isdigit(input[i]) && input[i] != '.') {
             return 0; // Return false
         }
     }
@@ -123,10 +149,48 @@ void displayLargestAndSmallest(Cylinder *cylinders) {
     }
 
     printf("Cylinder with largest height:\n");
-    printf("Radius: %.2f, Height: %.2f, Volume: %.2f\n", cylinders[largestIndex].base.radius, cylinders[largestIndex].height, cylinders[largestIndex].volume);
+    displayCylinderData(cylinders[largestIndex]);
 
     printf("\nCylinder with smallest height:\n");
-    printf("Radius: %.2f, Height: %.2f, Volume: %.2f\n", cylinders[smallestIndex].base.radius, cylinders[smallestIndex].height, cylinders[smallestIndex].volume);
+    displayCylinderData(cylinders[smallestIndex]);
+}
+
+void searchByRadiusRange(Cylinder *cylinders, double minRadius, double maxRadius) {
+    printf("Cylinders with radius between %.2f and %.2f:\n", minRadius, maxRadius);
+    bool found = false;
+    for (int i = 0; i < 10; i++) {
+        if (cylinders[i].base.radius >= minRadius && cylinders[i].base.radius <= maxRadius) {
+            displayCylinderData(cylinders[i]);
+            found = true;
+        }
+    }
+    if (!found) {
+        printf("No cylinders found within the specified radius range.\n");
+    }
+}
+
+void displayCylinderData(Cylinder cylinder) {
+    printf("Radius: %.2f, Height: %.2f, Volume: %.2f\n", cylinder.base.radius, cylinder.height, cylinder.volume);
+}
+
+void findLargestAndSmallestVolume(Cylinder *cylinders) {
+    int largestIndex = 0;
+    int smallestIndex = 0;
+
+    for (int i = 1; i < 10; i++) {
+        if (cylinders[i].volume > cylinders[largestIndex].volume) {
+            largestIndex = i;
+        }
+        if (cylinders[i].volume < cylinders[smallestIndex].volume) {
+            smallestIndex = i;
+        }
+    }
+
+    printf("\nCylinder with largest volume:\n");
+    displayCylinderData(cylinders[largestIndex]);
+
+    printf("\nCylinder with smallest volume:\n");
+    displayCylinderData(cylinders[smallestIndex]);
 }
 
 char *input(char *buffer, int size) {
