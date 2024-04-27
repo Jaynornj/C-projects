@@ -1,198 +1,221 @@
 #include <stdio.h>
-#include <stdlib.h> //  for malloc
-#include <string.h> //  for strcspn
-#include <stdbool.h> //  for bool type
-#include <time.h> //  for srand
-#include <ctype.h> //  for isdigit
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
-
-//AUTHOR: Jaynor Neiva
-//Description: Final test 
-//Date: 04/26/24
-//Course: COP 2220
-
-// Constants
-#define PI 3.14159
-#define BUFFER_SIZE 256                                 // Buffer size for input
-
-// Struct Circle
+// Zone structure
 typedef struct {
-    double radius;
-    double area;
-    double circumference;
-}  Circle;
+    int operation_date; // days offset from the current date
+    int start_time; // in minutes from midnight
+    int end_time; // in minutes from midnight
+    int total_minutes;
+    int sequence;
+    int skipped; // 0 = false, 1 = true
+    int state; // 0 = off, 1 = on
+} Zone;
+
+// Controller structure
+typedef struct {
+    struct tm current_datetime;
+    float rain_sensor_value;
+    int num_zones;
+    Zone *zones;
+} Controller;
 
 // Function prototypes
-void populateCircles(Circle *circles);
-void calculateAreas(Circle *circles);
-void calculateCircumferences(Circle *circles);
-void displayCircle(Circle circle);
-void searchAndDisplayCircle(Circle *circles);
-void displayLargestAndSmallest(Circle *circles);
-char *input(char *buffer, int size);
-bool validateRadius(const char *input);
-bool validateDigits(const char *input);
+void displayMenu(Controller *controller);
+void setDateTime(Controller *controller);
+void selectNumZones(Controller *controller);
+void configureZones(Controller *controller);
+void setRainSensor(Controller *controller);
+void scheduleOperation(Controller *controller);
+void resetSystem(Controller *controller);
+void loadDefaultSettings(Controller *controller);
+void saveSettings(Controller *controller);
+void deleteSettings(Controller *controller);
+void clearAndDisplayTime(Controller *controller);
+void flushStdin(void);
 
 int main() {
+    Controller controller;
+    loadDefaultSettings(&controller);
 
-    srand(time(NULL));                                // for the random number generator
-
-    // Allocate memory for array of circles
-    Circle *circles = (Circle *)malloc(10 * sizeof(Circle));
-    if (circles == NULL) {
-        printf("Memory allocation failed.\n");
-        return 1; // Exit program
-    }
-
-    int option;
-    int populated = 0;                                             // Flag to track if circles are populated
-
-    do {
-        // Display menu
-        printf("\nMenu:\n");
-        printf("1 - Populate all circles\n");
-        printf("2 - Search and display a circle by radius range\n");
-        printf("3 - Quit Program\n");
+    int choice;
+    while (1) {
+        clearAndDisplayTime(&controller);
+        displayMenu(&controller);
         printf("Enter your choice: ");
-
-        char buffer[BUFFER_SIZE];                                   // Buffer for input
-        input(buffer, BUFFER_SIZE);
-        if(!validateDigits(buffer)) {                         // Validate input
-            printf("Please enter digits.\n\n");
-            continue;                                               //repeat the loop if the input is invalid
-        }
-        sscanf(buffer, "%d", &option);
-
-        switch (option) {
+        scanf("%d", &choice);
+        switch (choice) {
             case 1:
-                if (!populated) {                             // if (populated):Check if circles are already populated
-                    populateCircles(circles);
-                    calculateAreas(circles);
-                    calculateCircumferences(circles);
-                    populated = 1;
-                } else {
-                    printf("Circles already populated.\n");
-                }
+                setDateTime(&controller);
                 break;
             case 2:
-                if (populated) {
-                    searchAndDisplayCircle(circles);
-                } else {
-                    printf("Circles must be populated first. Select option 1\n");
-                }
+                selectNumZones(&controller);
                 break;
             case 3:
-                if (populated) {
-                    displayLargestAndSmallest(circles);
-                } else {
-                    printf("Circles must be populated first.\n");
-                }
+                configureZones(&controller);
+                break;
+            case 4:
+                setRainSensor(&controller);
+                break;
+            case 5:
+                scheduleOperation(&controller);
+                break;
+            case 6:
+                resetSystem(&controller);
                 break;
             default:
-                printf("Invalid choice. Please keep between option 1 and 3.\n");
+                printf("Invalid choice, please try again.\n");
                 break;
         }
-    } while (option != 3);
-
-    // Free memory
-    free(circles);
-
+    }
     return 0;
 }
+void clearAndDisplayTime(Controller *controller) {
+    system("cls");  // Use "clear" if on Unix/Linux
+    char buffer[80];
+    strftime(buffer, sizeof(buffer), "%c", &controller->current_datetime);
+    printf("Current system date and time: %s\n\n", buffer);
+}
 
-void populateCircles(Circle *circles) {
-    for (int i = 0; i < 10; i++) {
-        circles[i].radius = (rand() % 99) + 2;                      // Generate random radius between 2 and 100
+void displayMenu(Controller *controller) {
+    // Display current date and time
+    char buffer[30];
+    time_t rawtime = time(NULL);
+    struct tm *timeinfo = localtime(&rawtime);
+    strftime(buffer, 30, "%c", timeinfo);
+    printf("\nCurrent system date and time: %s\n", buffer);
+
+    // Menu options
+    printf("1 - Set date and time\n");
+    printf("2 - Select number of zones\n");
+    printf("3 - Configure operation of all zones\n");
+    printf("4 - Set the rain sensor limits\n");
+    printf("5 - Schedule the operation of zones\n");
+    printf("6 - Reset system to default settings\n");
+    printf("7 - Exit program\n");
+}
+
+void setDateTime(Controller *controller) {
+    // Assuming this function sets system date and time manually for simplicity
+    time_t rawtime;
+    struct tm *timeinfo;
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+    printf("Enter year: ");
+    scanf("%d", &timeinfo->tm_year);
+    timeinfo->tm_year -= 1900; // tm_year is year since 1900
+
+    printf("Enter month (1-12): ");
+    scanf("%d", &timeinfo->tm_mon);
+    timeinfo->tm_mon -= 1; // tm_mon is month from 0 to 11
+
+    printf("Enter day (1-31): ");
+    scanf("%d", &timeinfo->tm_mday);
+
+    printf("Enter hour (0-23): ");
+    scanf("%d", &timeinfo->tm_hour);
+
+    printf("Enter minute (0-59): ");
+    scanf("%d", &timeinfo->tm_min);
+
+    printf("Enter second (0-59): ");
+    scanf("%d", &timeinfo->tm_sec);
+
+    mktime(timeinfo); // normalize the time structure
+    controller->current_datetime = *timeinfo;
+}
+
+void selectNumZones(Controller *controller) {
+    printf("Enter the number of zones: ");
+    scanf("%d", &controller->num_zones);
+    controller->zones = (Zone *)malloc(controller->num_zones * sizeof(Zone));
+    for (int i = 0; i < controller->num_zones; i++) {
+        controller->zones[i].sequence = i + 1;
+        controller->zones[i].skipped = 0;
+        controller->zones[i].state = 0;
     }
-    printf("Circles populated with random radius values.\n\n");
 }
 
-void calculateAreas(Circle *circles) {
-    for (int i = 0; i < 10; i++) {
-        circles[i].area = PI * circles[i].radius * circles[i].radius;    // Area = PI * r^2
+void configureZones(Controller *controller) {
+    for (int i = 0; i < controller->num_zones; i++) {
+        printf("Configuring zone %d:\n", i + 1);
+        printf("Enter operation date (days from today): ");
+        scanf("%d", &controller->zones[i].operation_date);
+        printf("Enter start time (minutes from midnight): ");
+        scanf("%d", &controller->zones[i].start_time);
+        printf("Enter duration (minutes): ");
+        scanf("%d", &controller->zones[i].total_minutes);
+        controller->zones[i].end_time = controller->zones[i].start_time + controller->zones[i].total_minutes;
     }
 }
 
-void calculateCircumferences(Circle *circles) {
-    for (int i = 0; i < 10; i++) {
-        circles[i].circumference = 2 * PI * circles[i].radius;         // Circumference = 2 * PI * r
-    }
-}
+void setRainSensor(Controller *controller) {
+    float tempValue;
+    int isValid =0; //flag to check valid input
 
-void displayCircle(Circle circle) {
-    printf("Circle with radius %.2f\n", circle.radius);
-    printf("Area: %.2f\n", circle.area);
-    printf("Circumference: %.2f\n", circle.circumference);
-}
+    while (!isValid) {
+        printf("Enter rain sensor value (0 to 2 inches): ");
+        scanf("%f", &tempValue);
 
-void searchAndDisplayCircle(Circle *circles) {
-    double lowerBound, upperBound;
-    char buffer[BUFFER_SIZE];                                       // Buffer for input
-
-    do {
-        printf("Enter lower bound of radius range: ");
-        input(buffer, BUFFER_SIZE);
-        if (!validateDigits(buffer)) {                        // Validate input
-            printf("Please enter digits only.\n");
+        // Check if the value is within the allowable range and is an increment of 0.5
+        if ((tempValue >= 0.5 && tempValue <= 2.0) && ((int)(tempValue * 10) % 5 == 0)) {
+            isValid = 1; // Set flag to true if value is valid
+            controller->rain_sensor_value = tempValue;
+        } else {
+            printf("Invalid input. Please enter a value of 0.5, 1.0, 1.5, or 2.0 inches.\n");
         }
-    } while (!validateDigits(buffer));
-    sscanf(buffer, "%lf", &lowerBound);
-
-    do {
-        printf("Enter upper bound of radius range: ");
-        input(buffer, BUFFER_SIZE);
-        if (!validateDigits(buffer)) {
-            printf("Please enter digits only.\n");
-        }
-    } while (!validateDigits(buffer));
-    sscanf(buffer, "%lf", &upperBound);
-
-    int found = 0;
-    for (int i = 0; i < 10; i++) {
-        if (circles[i].radius >= lowerBound && circles[i].radius <= upperBound) { // Check if radius is within range
-            displayCircle(circles[i]);
-            found = 1;
-        }
     }
 
-    if (!found) { // If no circles found
-        printf("No circles found with this radius range.\n");
+    printf("Rain sensor limit set to %.1f inches.\n", controller->rain_sensor_value);
+}
+
+void scheduleOperation(Controller *controller) {
+    // Simulation of operation
+    printf("Scheduling operation:\n");
+    for (int i = 0; i < controller->num_zones; i++) {
+        if (controller->rain_sensor_value > 0) {
+            printf("Zone %d operation skipped due to rain.\n", i + 1);
+            controller->zones[i].skipped = 1;
+        } else {
+            printf("Zone %d operating from %d to %d minutes.\n", i + 1, controller->zones[i].start_time, controller->zones[i].end_time);
+            controller->zones[i].skipped = 0;
+        }
     }
 }
 
-bool validateDigits(const char *input) {                                // Validate if input is digits only
-    for (int i = 0; i < strlen(input); i++) {
-        if (!isdigit(input[i])) {
-            return false;
-        }
+void resetSystem(Controller *controller) {
+    deleteSettings(controller);
+    loadDefaultSettings(controller);
+    printf("System reset to default settings.\n");
+}
+
+void loadDefaultSettings(Controller *controller) {
+    // Loads default settings, could be extended to read from a file
+    controller->num_zones = 7; // default number of zones
+    controller->rain_sensor_value = 0.0;
+    controller->zones = (Zone *)malloc(controller->num_zones * sizeof(Zone));
+    for (int i = 0; i < controller->num_zones; i++) {
+        controller->zones[i].operation_date = 0;
+        controller->zones[i].start_time = 480 + i * 30; // starting at 8:00 AM, each 30 minutes apart
+        controller->zones[i].total_minutes = 30;
+        controller->zones[i].end_time = controller->zones[i].start_time + controller->zones[i].total_minutes;
+        controller->zones[i].sequence = i + 1;
+        controller->zones[i].skipped = 0;
+        controller->zones[i].state = 0;
     }
-    return true;
 }
 
-void displayLargestAndSmallest(Circle *circles) {
-    int largestIndex = 0;
-    int smallestIndex = 0;
-
-    for (int i = 1; i < 10; i++) {
-        if (circles[i].radius > circles[largestIndex].radius) { // Check if radius is larger
-            largestIndex = i;
-        }
-        if (circles[i].radius < circles[smallestIndex].radius) { // Check if radius is smaller
-            smallestIndex = i;
-        }
-    }
-
-    printf("Circle with largest radius:\n");
-    displayCircle(circles[largestIndex]);                // Display circle with largest radius
-
-    printf("\nCircle with smallest radius:\n");
-    displayCircle(circles[smallestIndex]);               // Display circle with smallest radius
-}
-char *input(char *buffer, int size) {
-    fgets(buffer, size, stdin);
-    buffer[strcspn(buffer, "\n")] = '\0';          // Remove newline character
-    return buffer; // Return input
+void saveSettings(Controller *controller) {
+    // Save settings to file
 }
 
-// Good day Dr.Saylani, Thank you for the opportunity to retake the final test.
-// I have made the necessary changes to the code and I am submitting it for your review.
+void deleteSettings(Controller *controller) {
+    // Delete settings file
+}
+
+void flushStdin(void) {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) { }
+}
