@@ -18,10 +18,12 @@ typedef struct {
 typedef struct {
     struct tm current_datetime;
     float rain_sensor_value;
+    float rain_sensor_limit; // User-defined rain sensor limit
     int num_zones;
     Zone *zones;
 } Controller;
 
+// Function prototypes
 void displayMenu();
 void clearAndDisplayTime(Controller *controller);
 void setDateTime(Controller *controller);
@@ -31,15 +33,7 @@ void setRainSensor(Controller *controller);
 void scheduleOperation(Controller *controller);
 void resetSystem(Controller *controller);
 void loadDefaultSettings(Controller *controller);
-
-
-
-char *input(char *buffer, int size) {
-    if (fgets(buffer, size, stdin)) {
-        buffer[strcspn(buffer, "\n")] = '\0'; // Remove newline character
-    }
-    return buffer;
-}
+char *input(char *buffer, int size);
 
 int main() {
     Controller controller;
@@ -92,7 +86,6 @@ void clearAndDisplayTime(Controller *controller) {
     printf("Current system date and time: %s\n\n", buffer);
 }
 
-
 void displayMenu() {
     printf("\nMenu:\n");
     printf("1 - Set date and time\n");
@@ -128,7 +121,6 @@ void setDateTime(Controller *controller) {
     printf("Date and time set to: %s\n", ctime(&timeoftheday));
 }
 
-
 void selectNumZones(Controller *controller) {
     char buffer[BUFFER_SIZE];
     printf("Enter the number of zones: ");
@@ -159,10 +151,8 @@ void selectNumZones(Controller *controller) {
     }
 
     // Optionally, clear and display current time after updating zones
- clearAndDisplayTime(controller);
-
+    clearAndDisplayTime(controller);
 }
-
 
 void configureZones(Controller *controller) {
     char buffer[BUFFER_SIZE];
@@ -183,50 +173,57 @@ void configureZones(Controller *controller) {
 
         controller->zones[i].end_time = controller->zones[i].start_time + controller->zones[i].total_minutes;
     }
- clearAndDisplayTime(controller);
+    clearAndDisplayTime(controller);
 }
 
 void setRainSensor(Controller *controller) {
     char buffer[BUFFER_SIZE];
-    printf("Enter rain sensor value (0 to 2 inches, 0 for no operation): ");
+    printf("Enter the rain sensor limit (in inches, 0 to 2): "); // User-defined rain sensor limit
     input(buffer, BUFFER_SIZE);
-    sscanf(buffer, "%f", &controller->rain_sensor_value);
- //clearAndDisplayTime(controller);
+    sscanf(buffer, "%f", &controller->rain_sensor_limit);
+
+    // Generate a random rain sensor value between 0 and 2 inches
+    srand(time(NULL));
+    controller->rain_sensor_value = (float)(rand() % 21) / 10.0; // Random value between 0 and 2 with 0.1 increment
+    printf("Rain sensor value set to: %.1f inches\n", controller->rain_sensor_value);
 }
 
 void scheduleOperation(Controller *controller) {
     printf("Scheduling operation:\n");
     for (int i = 0; i < controller->num_zones; i++) {
-        if (controller->rain_sensor_value > 0) {
-            printf("Zone %d operation skipped due to rain.\n", i + 1);
-            controller->zones[i].skipped = 1;
-            controller->zones[i].state = 0;
+        if (controller->rain_sensor_value > controller->rain_sensor_limit) {
+            printf("Rain sensor value %.1f inches detected. Zone %d operation skipped.\n", controller->rain_sensor_value, i + 1);
+            controller->zones[i].state = 0; // Zone operation skipped
         } else {
             printf("Zone %d operating from %d to %d minutes.\n", i + 1, controller->zones[i].start_time, controller->zones[i].end_time);
-            controller->zones[i].skipped = 0;
-            controller->zones[i].state = 1;
+            controller->zones[i].state = 1; // Zone operation scheduled
         }
     }
-clearAndDisplayTime(controller);
+    clearAndDisplayTime(controller);
 }
 
 void resetSystem(Controller *controller) {
     free(controller->zones);
     loadDefaultSettings(controller);
     printf("System reset to default settings.\n");
-// clearAndDisplayTime(controller);
 }
 
-    void loadDefaultSettings(Controller *controller) {
-        controller->num_zones = 5; // default number of zones
-        controller->rain_sensor_value = 0.0; // no rain by default
-        controller->zones = (Zone *) malloc(controller->num_zones * sizeof(Zone));
-        for (int i = 0; i < controller->num_zones; i++) {
-            controller->zones[i] = (Zone) {.operation_date = 0, .start_time = 480 +
-                                                                              i * 30, .total_minutes = 30, .sequence =
-            i + 1};
-            controller->zones[i].end_time = controller->zones[i].start_time + controller->zones[i].total_minutes;
-        }
-        clearAndDisplayTime(controller);
-
+void loadDefaultSettings(Controller *controller) {
+    controller->num_zones = 5; // default number of zones
+    controller->rain_sensor_limit = 0.0; // default rain sensor limit
+    controller->rain_sensor_value = 0.0; // no rain by default
+    controller->zones = (Zone *)malloc(controller->num_zones * sizeof(Zone));
+    for (int i = 0; i < controller->num_zones; i++) {
+        controller->zones[i] = (Zone) {.operation_date = 0, .start_time = 480 +
+                                                                          i * 30, .total_minutes = 30, .sequence = i + 1};
+        controller->zones[i].end_time = controller->zones[i].start_time + controller->zones[i].total_minutes;
     }
+    clearAndDisplayTime(controller);
+}
+
+char *input(char *buffer, int size) {
+    if (fgets(buffer, size, stdin)) {
+        buffer[strcspn(buffer, "\n")] = '\0'; // Remove newline character
+    }
+    return buffer;
+}
