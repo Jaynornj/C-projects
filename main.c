@@ -189,16 +189,31 @@ void setRainSensor(Controller *controller) {
 }
 
 void scheduleOperation(Controller *controller) {
-    printf("Scheduling operation:\n");
+    clearAndDisplayTime(controller);
+
+    // Display current rain sensor state
+    printf("Rain sensor state: %.1f inches\n", controller->rain_sensor_value);
+
+    // Display operation of all zones
+    printf("Zone Operation:\n");
     for (int i = 0; i < controller->num_zones; i++) {
-        if (controller->rain_sensor_value > controller->rain_sensor_limit) {
-            printf("Rain sensor value %.1f inches detected. Zone %d operation skipped.\n", controller->rain_sensor_value, i + 1);
-            controller->zones[i].state = 0; // Zone operation skipped
+        printf("Zone %d: ", i + 1);
+        if (controller->zones[i].state == 1) {
+            printf("Active\n");
+            printf("Operation Date: %d\n", controller->zones[i].operation_date);
+            printf("Start Time: %d minutes\n", controller->zones[i].start_time);
+            printf("End Time: %d minutes\n", controller->zones[i].end_time);
+            printf("Total Minutes: %d\n", controller->zones[i].total_minutes);
+            printf("Sequence: %d\n", controller->zones[i].sequence);
+            printf("Skipped: %d\n", controller->zones[i].skipped);
         } else {
-            printf("Zone %d operating from %d to %d minutes.\n", i + 1, controller->zones[i].start_time, controller->zones[i].end_time);
-            controller->zones[i].state = 1; // Zone operation scheduled
+            printf("Inactive\n");
         }
     }
+
+    // Wait for user input to continue
+    printf("\nPress Enter to return to the main menu.");
+    getchar(); // Wait for Enter key press
     clearAndDisplayTime(controller);
 }
 
@@ -206,11 +221,13 @@ void resetSystem(Controller *controller) {
     free(controller->zones);
     loadDefaultSettings(controller);
     printf("System reset to default settings.\n");
+    clearAndDisplayTime(controller);
 }
+
 
 void loadDefaultSettings(Controller *controller) {
     controller->num_zones = 5; // default number of zones
-    controller->rain_sensor_limit = 0.0; // default rain sensor limit
+    controller->rain_sensor_limit = 2.0; // default rain sensor limit
     controller->rain_sensor_value = 0.0; // no rain by default
     controller->zones = (Zone *)malloc(controller->num_zones * sizeof(Zone));
     for (int i = 0; i < controller->num_zones; i++) {
