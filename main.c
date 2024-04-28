@@ -2,8 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdbool.h>
+#include <ctype.h>
 
 #define BUFFER_SIZE 256
+
+
 
 typedef struct {
     int operation_date; // days offset from the current date
@@ -34,21 +38,36 @@ void scheduleOperation(Controller *controller);
 void resetSystem(Controller *controller);
 void loadDefaultSettings(Controller *controller);
 char *input(char *buffer, int size);
+bool validateDigits(const char *input);
 
 int main() {
     Controller controller;
     loadDefaultSettings(&controller);
     char buffer[BUFFER_SIZE];
-    int choice;
+    int option;
 
-    while (1) {
-        clearAndDisplayTime(&controller);
-        displayMenu();
-        printf("Enter your choice: ");
+    do {
+        // Display menu
+        printf("\n\nMenu:\n");
+        printf("1 - Set date and time\n");
+        printf("2 - Select number of zones\n");
+        printf("3 - Configure operation of all zones\n");
+        printf("4 - Set the rain sensor limits\n");
+        printf("5 - Schedule the operation of zones\n");
+        printf("6 - Reset system to default settings\n");
+        printf("7 - Exit program\n");
+        printf("Enter your choice (1-7): ");
+
         input(buffer, BUFFER_SIZE);
-        sscanf(buffer, "%d", &choice);
 
-        switch (choice) {
+        if (!validateDigits(buffer)) {
+            printf("Please enter digits.\n\n");
+            continue;
+        }
+
+        sscanf(buffer, "%d", &option);
+
+        switch (option) {
             case 1:
                 setDateTime(&controller);
                 break;
@@ -71,10 +90,15 @@ int main() {
                 printf("Exiting the program.\n");
                 return 0;
             default:
-                printf("Invalid choice, please try again.\n");
+                printf("Invalid choice. Please keep between option 1 and 7.\n");
                 break;
         }
-    }
+    } while (option != 7);
+
+    // Free memory
+    free(controller.zones);
+
+    return 0;
 }
 
 void clearAndDisplayTime(Controller *controller) {
@@ -86,23 +110,12 @@ void clearAndDisplayTime(Controller *controller) {
     printf("Current system date and time: %s\n\n", buffer);
 }
 
-void displayMenu() {
-    printf("\nMenu:\n");
-    printf("1 - Set date and time\n");
-    printf("2 - Select number of zones\n");
-    printf("3 - Configure operation of all zones\n");
-    printf("4 - Set the rain sensor limits\n");
-    printf("5 - Schedule the operation of zones\n");
-    printf("6 - Reset system to default settings\n");
-    printf("7 - Exit program\n");
-}
-
 void setDateTime(Controller *controller) {
     struct tm newTime;
     time_t timeoftheday;
 
     // Set a hardcoded date and time
-    newTime.tm_year = 2024 - 1900; // Year 2022
+    newTime.tm_year = 2024 - 1900; // Year 2024
     newTime.tm_mon = 1 - 1;        // January (month is 0-indexed, 0 for January)
     newTime.tm_mday = 1;           // 1st day of the month
     newTime.tm_hour = 12;          // 12:00 PM
@@ -125,7 +138,12 @@ void selectNumZones(Controller *controller) {
     char buffer[BUFFER_SIZE];
     printf("Enter the number of zones: ");
     input(buffer, BUFFER_SIZE);
+    if (!validateDigits(buffer)) {
+        printf("Please enter digits.\n\n");
+        return;
+    }while (!validateDigits(buffer));
     sscanf(buffer, "%d", &controller->num_zones);
+
 
     // Free the existing zones array if it already exists
     if (controller->zones != NULL) {
@@ -150,7 +168,7 @@ void selectNumZones(Controller *controller) {
         controller->zones[i].state = 0;          // Initially off
     }
 
-    // Optionally, clear and display current time after updating zones
+    // Clear and display current time after updating zones
     clearAndDisplayTime(controller);
 }
 
@@ -161,14 +179,26 @@ void configureZones(Controller *controller) {
 
         printf("Enter operation date (days from today): ");
         input(buffer, BUFFER_SIZE);
+        if (!validateDigits(buffer)) {
+            printf("Please enter digits.\n\n");
+            return;
+        }while (!validateDigits(buffer));
         sscanf(buffer, "%d", &controller->zones[i].operation_date);
 
         printf("Enter start time (minutes from midnight): ");
         input(buffer, BUFFER_SIZE);
+        if (!validateDigits(buffer)) {
+            printf("Please enter digits.\n\n");
+            return;
+        }while (!validateDigits(buffer));
         sscanf(buffer, "%d", &controller->zones[i].start_time);
 
         printf("Enter duration (minutes): ");
         input(buffer, BUFFER_SIZE);
+        if (!validateDigits(buffer)) {
+            printf("Please enter digits.\n\n");
+            return;
+        }while (!validateDigits(buffer));
         sscanf(buffer, "%d", &controller->zones[i].total_minutes);
 
         controller->zones[i].end_time = controller->zones[i].start_time + controller->zones[i].total_minutes;
@@ -180,6 +210,10 @@ void setRainSensor(Controller *controller) {
     char buffer[BUFFER_SIZE];
     printf("Enter the rain sensor limit (in inches, 0 to 2): "); // User-defined rain sensor limit
     input(buffer, BUFFER_SIZE);
+    if (!validateDigits(buffer)) {
+        printf("Please enter digits.\n\n");
+        return;
+    }while (!validateDigits(buffer));
     sscanf(buffer, "%f", &controller->rain_sensor_limit);
 
     // Generate a random rain sensor value between 0 and 2 inches
@@ -189,16 +223,25 @@ void setRainSensor(Controller *controller) {
 }
 
 void scheduleOperation(Controller *controller) {
-    clearAndDisplayTime(controller);
 
     // Display current rain sensor state
     printf("Rain sensor state: %.1f inches\n", controller->rain_sensor_value);
 
     // Display operation of all zones
     printf("Zone Operation:\n");
+
+    // Determine which zone to activate (example: activate the first zone)
+    int activeZoneIndex = 0;
+    // Ensure the active zone index is within the valid range
+    if (activeZoneIndex >= 0 && activeZoneIndex < controller->num_zones) {
+        // Set the state of the selected zone to active (1)
+        controller->zones[activeZoneIndex].state = 1;
+    }
+
     for (int i = 0; i < controller->num_zones; i++) {
         printf("Zone %d: ", i + 1);
-        if (controller->zones[i].state == 1) {
+        if (i == activeZoneIndex) {
+            // Display the active zone details
             printf("Active\n");
             printf("Operation Date: %d\n", controller->zones[i].operation_date);
             printf("Start Time: %d minutes\n", controller->zones[i].start_time);
@@ -207,6 +250,7 @@ void scheduleOperation(Controller *controller) {
             printf("Sequence: %d\n", controller->zones[i].sequence);
             printf("Skipped: %d\n", controller->zones[i].skipped);
         } else {
+            // Display inactive for other zones
             printf("Inactive\n");
         }
     }
@@ -243,4 +287,15 @@ char *input(char *buffer, int size) {
         buffer[strcspn(buffer, "\n")] = '\0'; // Remove newline character
     }
     return buffer;
+}
+
+#include <stdbool.h>
+
+bool validateDigits(const char *input) {
+    for (int i = 0; input[i] != '\0'; i++) {
+        if (!isdigit(input[i])) {
+            return false;
+        }
+    }
+    return true;
 }
