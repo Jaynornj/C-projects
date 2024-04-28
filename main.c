@@ -104,8 +104,8 @@ int main() {
 
 
 // Clear the screen and display the current time
-void clearAndDisplayTime(Controller *controller) {  // Clear the screen and display the current time
-    system("cls"); // use clear for unix OS, I was not able to try this on my windows machine. the "clear"
+void clearAndDisplayTime(Controller *controller) {
+    system("cls"); // should work as well for unix os, but I haven't tried it
     char buffer[80];
     time_t current_time = time(NULL);                                      // Get the current time
     struct tm *timeinfo = localtime(&current_time);                        // Convert to local time
@@ -143,11 +143,13 @@ void setDateTime(Controller *controller) {
 // Select the number of zones
 void selectNumZones(Controller *controller) {
     char buffer[BUFFER_SIZE];
+
+    do {
     printf("Enter the number of zones: ");
     input(buffer, BUFFER_SIZE);                    // Get user input
     if (!validateDigits(buffer)) {                      // Validate input
         printf("Please enter digits.\n\n");
-        return;
+        }
     }while (!validateDigits(buffer));                   // Repeat the loop if the input is invalid
     sscanf(buffer, "%d", &controller->num_zones);
 
@@ -184,27 +186,32 @@ void configureZones(Controller *controller) {
     for (int i = 0; i < controller->num_zones; i++) {
         printf("Configuring zone %d:\n", i + 1);
 
+
+        do {
         printf("Enter operation date (days from today): ");
         input(buffer, BUFFER_SIZE);
         if (!validateDigits(buffer)) {
             printf("Please enter digits.\n\n");
-            return;
+        }
         }while (!validateDigits(buffer));
         sscanf(buffer, "%d", &controller->zones[i].operation_date); // Set the operation date
 
+        do {
         printf("Enter start time (minutes from midnight): ");
         input(buffer, BUFFER_SIZE);
         if (!validateDigits(buffer)) {
             printf("Please enter digits.\n\n");
-            return;
+            }
         }while (!validateDigits(buffer));
         sscanf(buffer, "%d", &controller->zones[i].start_time); //  Set the start time
 
+
+        do {
         printf("Enter duration (minutes): ");
         input(buffer, BUFFER_SIZE);
         if (!validateDigits(buffer)) {
             printf("Please enter digits.\n\n");
-            return;
+            }
         }while (!validateDigits(buffer));
         sscanf(buffer, "%d", &controller->zones[i].total_minutes);  // Set the duration
 
@@ -217,11 +224,12 @@ void configureZones(Controller *controller) {
 // Set the rain sensor limits
 void setRainSensor(Controller *controller) {
     char buffer[BUFFER_SIZE];
+    do{
     printf("Enter the rain sensor limit (in inches, 0 to 2): "); // rain sensor limit
     input(buffer, BUFFER_SIZE); // Get user input
     if (!validateDigits(buffer)) {
         printf("Please enter digits.\n\n");
-        return;
+        }
     }while (!validateDigits(buffer));
     sscanf(buffer, "%f", &controller->rain_sensor_limit);   // Set the rain sensor limit
 
